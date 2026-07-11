@@ -3,6 +3,6 @@
   "watchlist": [
     { "symbol": "AAPL", "mode": "daily", "threshold_pct": 3 },
     { "symbol": "SHOP.TO", "mode": "daily", "threshold_pct": 3 },
-    { "symbol": "RY.TO", "mode": "fixed", "reference": 145.00, "threshold_pct": 5 }
+    { "symbol": "SOXL", "mode": "fixed", "reference": 145.00, "threshold_pct": 5 }
   ]
 }
