@@ -1,8 +1,15 @@
 {
   "_comment": "mode: 'daily' compares against previous close. 'fixed' compares against a price you set yourself in 'reference'.",
   "watchlist": [
-    { "symbol": "AAPL", "mode": "daily", "threshold_pct": 3 },
-    { "symbol": "SHOP.TO", "mode": "daily", "threshold_pct": 3 },
-    { "symbol": "SOXL", "mode": "fixed", "reference": 145.00, "threshold_pct": 5 }
+    {
+      "mode": "daily",
+      "symbol": "SOXL",
+      "threshold_pct": -6.5
+    },
+    {
+      "mode": "daily",
+      "symbol": "SOXL",
+      "threshold_pct": -12
+    }
   ]
 }
