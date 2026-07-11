@@ -9,7 +9,7 @@
     {
       "mode": "daily",
       "symbol": "SOXL",
-      "threshold_pct": -12
+      "threshold_pct": -13
     }
   ]
 }
