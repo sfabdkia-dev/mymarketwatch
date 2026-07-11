@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MarketWatch</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #0f1117;
+    color: #e2e8f0;
+    min-height: 100vh;
+    padding: 32px 16px;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin-bottom: 28px;
+    color: #f8fafc;
+  }
+
+  h2 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #64748b;
+    margin-bottom: 14px;
+  }
+
+  .container { max-width: 760px; margin: 0 auto; }
+
+  /* ── Add form ─────────────────────────────────── */
+  .card {
+    background: #1e2330;
+    border: 1px solid #2d3348;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 28px;
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field.full { grid-column: 1 / -1; }
+
+  label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  input, select {
+    background: #0f1117;
+    border: 1px solid #2d3348;
+    border-radius: 8px;
+    color: #e2e8f0;
+    font-size: 0.9rem;
+    padding: 9px 12px;
+    outline: none;
+    transition: border-color 0.15s;
+    width: 100%;
+  }
+
+  input:focus, select:focus { border-color: #6366f1; }
+  input::placeholder { color: #475569; }
+
+  select option { background: #1e2330; }
+
+  .btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+
+  button {
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 9px 18px;
+    transition: opacity 0.15s, background 0.15s;
+  }
+  button:hover { opacity: 0.85; }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .btn-primary { background: #6366f1; color: #fff; }
+  .btn-secondary { background: #2d3348; color: #cbd5e1; }
+  .btn-danger { background: transparent; border: 1px solid #ef4444; color: #ef4444; padding: 5px 12px; font-size: 0.8rem; }
+
+  /* ── Check result ──────────────────────────────── */
+  #check-result {
+    margin-top: 14px;
+    font-size: 0.875rem;
+    border-radius: 8px;
+    padding: 10px 14px;
+    display: none;
+  }
+  #check-result.ok  { background: #14291e; border: 1px solid #22c55e; color: #86efac; }
+  #check-result.err { background: #2a1414; border: 1px solid #ef4444; color: #fca5a5; }
+
+  /* ── Watchlist table ───────────────────────────── */
+  .table-wrap { overflow-x: auto; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+  }
+
+  thead th {
+    text-align: left;
+    padding: 0 14px 10px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    border-bottom: 1px solid #2d3348;
+  }
+
+  tbody tr { border-bottom: 1px solid #1a1f2e; transition: background 0.1s; }
+  tbody tr:hover { background: #1a1f2e; }
+  tbody tr:last-child { border-bottom: none; }
+
+  td {
+    padding: 12px 14px;
+    vertical-align: middle;
+  }
+
+  .symbol { font-weight: 600; color: #a5b4fc; font-size: 0.95rem; }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .badge-daily { background: #1e3a5f; color: #60a5fa; }
+  .badge-fixed { background: #2e1e5f; color: #a78bfa; }
+
+  .threshold { font-family: monospace; }
+  .threshold.neg { color: #f87171; }
+  .threshold.pos { color: #4ade80; }
+
+  .empty-row td {
+    text-align: center;
+    padding: 32px;
+    color: #475569;
+  }
+
+  /* ── Save bar ──────────────────────────────────── */
+  #save-bar {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1e2330;
+    border: 1px solid #6366f1;
+    border-radius: 12px;
+    padding: 12px 20px;
+    display: none;
+    align-items: center;
+    gap: 14px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    z-index: 100;
+    white-space: nowrap;
+  }
+  #save-bar span { font-size: 0.875rem; color: #94a3b8; }
+  #save-status { font-size: 0.8rem; color: #4ade80; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>MarketWatch</h1>
+
+  <!-- ── Add ticker form ── -->
+  <div class="card">
+    <h2>Add Ticker</h2>
+    <div class="form-grid">
+      <div class="field">
+        <label>Symbol</label>
+        <input id="f-symbol" type="text" placeholder="e.g. AAPL, SHOP.TO" autocomplete="off">
+      </div>
+      <div class="field">
+        <label>Mode</label>
+        <select id="f-mode">
+          <option value="daily">Daily — vs. previous close</option>
+          <option value="fixed">Fixed — vs. reference price</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Threshold %</label>
+        <input id="f-threshold" type="number" step="0.1" placeholder="e.g. -5 or 3">
+      </div>
+      <div class="field" id="ref-field" style="display:none">
+        <label>Reference Price</label>
+        <input id="f-reference" type="number" step="0.01" placeholder="e.g. 145.00">
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-primary" onclick="addEntry()">Add to Watchlist</button>
+      <button class="btn-secondary" onclick="checkTicker()">Check Price Now</button>
+    </div>
+    <div id="check-result"></div>
+  </div>
+
+  <!-- ── Watchlist ── -->
+  <div class="card">
+    <h2>Watchlist</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Symbol</th>
+            <th>Mode</th>
+            <th>Threshold %</th>
+            <th>Reference</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="wl-body">
+          <tr class="empty-row"><td colspan="5">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ── Save bar ── -->
+<div id="save-bar">
+  <span>You have unsaved changes.</span>
+  <button class="btn-primary" onclick="saveWatchlist()">Save</button>
+  <button class="btn-secondary" onclick="discardChanges()">Discard</button>
+  <span id="save-status"></span>
+</div>
+
+<script>
+let watchlist = [];
+let dirty = false;
+
+// ── Fetch & render ────────────────────────────────────────────
+async function loadWatchlist() {
+  const res = await fetch('/api/watchlist');
+  watchlist = await res.json();
+  renderTable();
+}
+
+function renderTable() {
+  const body = document.getElementById('wl-body');
+  if (watchlist.length === 0) {
+    body.innerHTML = '<tr class="empty-row"><td colspan="5">No entries yet.</td></tr>';
+    return;
+  }
+  body.innerHTML = watchlist.map((e, i) => {
+    const pct = e.threshold_pct;
+    const cls = pct < 0 ? 'neg' : 'pos';
+    const sign = pct > 0 ? '+' : '';
+    const ref = e.reference != null ? `$${Number(e.reference).toFixed(2)}` : '—';
+    return `
+      <tr>
+        <td class="symbol">${esc(e.symbol)}</td>
+        <td><span class="badge badge-${e.mode}">${e.mode}</span></td>
+        <td class="threshold ${cls}">${sign}${pct}%</td>
+        <td>${ref}</td>
+        <td><button class="btn-danger" onclick="removeEntry(${i})">Remove</button></td>
+      </tr>`;
+  }).join('');
+}
+
+// ── Add entry ─────────────────────────────────────────────────
+function addEntry() {
+  const symbol = document.getElementById('f-symbol').value.trim().toUpperCase();
+  const mode = document.getElementById('f-mode').value;
+  const threshold = parseFloat(document.getElementById('f-threshold').value);
+
+  if (!symbol) return alert('Please enter a symbol.');
+  if (isNaN(threshold)) return alert('Please enter a threshold percentage.');
+
+  const entry = { symbol, mode, threshold_pct: threshold };
+
+  if (mode === 'fixed') {
+    const ref = parseFloat(document.getElementById('f-reference').value);
+    if (isNaN(ref)) return alert('Fixed mode requires a reference price.');
+    entry.reference = ref;
+  }
+
+  watchlist.push(entry);
+  renderTable();
+  markDirty();
+
+  // Clear form
+  document.getElementById('f-symbol').value = '';
+  document.getElementById('f-threshold').value = '';
+  document.getElementById('f-reference').value = '';
+  document.getElementById('check-result').style.display = 'none';
+}
+
+// ── Remove entry ──────────────────────────────────────────────
+function removeEntry(i) {
+  watchlist.splice(i, 1);
+  renderTable();
+  markDirty();
+}
+
+// ── Check ticker ──────────────────────────────────────────────
+async function checkTicker() {
+  const symbol = document.getElementById('f-symbol').value.trim().toUpperCase();
+  const el = document.getElementById('check-result');
+  if (!symbol) { alert('Enter a symbol first.'); return; }
+
+  el.style.display = 'block';
+  el.className = '';
+  el.textContent = `Looking up ${symbol}…`;
+
+  const res = await fetch(`/api/check-ticker?symbol=${encodeURIComponent(symbol)}`);
+  const data = await res.json();
+
+  if (data.error) {
+    el.className = 'err';
+    el.textContent = `Error: ${data.error}`;
+  } else if (!data.found) {
+    el.className = 'err';
+    el.textContent = `${symbol} not found — ${data.message}`;
+  } else {
+    const pctChange = ((data.price - data.prev_close) / data.prev_close * 100).toFixed(2);
+    const sign = pctChange >= 0 ? '+' : '';
+    el.className = 'ok';
+    el.textContent = `${data.name} (${symbol})  ·  $${data.price.toFixed(2)}  ·  ${sign}${pctChange}% vs prev close`;
+
+    // Pre-fill reference with current price if in fixed mode
+    if (document.getElementById('f-mode').value === 'fixed' &&
+        !document.getElementById('f-reference').value) {
+      document.getElementById('f-reference').value = data.price.toFixed(2);
+    }
+  }
+}
+
+// ── Save / discard ────────────────────────────────────────────
+async function saveWatchlist() {
+  const res = await fetch('/api/watchlist', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(watchlist),
+  });
+  const data = await res.json();
+  const status = document.getElementById('save-status');
+  if (data.ok) {
+    dirty = false;
+    document.getElementById('save-bar').style.display = 'none';
+    const pub = data.publish;
+    if (pub && !pub.ok) {
+      alert('Saved locally, but publishing to GitHub failed:\n' + pub.message);
+    }
+    status.textContent = '';
+  } else {
+    status.textContent = 'Save failed.';
+  }
+}
+
+function discardChanges() {
+  dirty = false;
+  document.getElementById('save-bar').style.display = 'none';
+  loadWatchlist();
+}
+
+function markDirty() {
+  dirty = true;
+  const bar = document.getElementById('save-bar');
+  bar.style.display = 'flex';
+  document.getElementById('save-status').textContent = '';
+}
+
+// ── Mode toggle ───────────────────────────────────────────────
+document.getElementById('f-mode').addEventListener('change', function() {
+  document.getElementById('ref-field').style.display =
+    this.value === 'fixed' ? 'flex' : 'none';
+});
+
+// ── Enter key on symbol → check price ─────────────────────────
+document.getElementById('f-symbol').addEventListener('keydown', e => {
+  if (e.key === 'Enter') checkTicker();
+});
+
+// ── Init ──────────────────────────────────────────────────────
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+loadWatchlist();
+</script>
+</body>
+</html>
