@@ -12,14 +12,19 @@
       "threshold_pct": -13
     },
     {
-      "symbol": "SOXL",
       "mode": "daily",
+      "symbol": "SOXL",
       "threshold_pct": -7
     },
     {
-      "symbol": "SOXL",
       "mode": "daily",
+      "symbol": "SOXL",
       "threshold_pct": -16
+    },
+    {
+      "symbol": "SOXS",
+      "mode": "daily",
+      "threshold_pct": 13
     }
   ]
 }
