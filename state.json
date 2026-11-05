@@ -1,6 +1,7 @@
 {
   "date": "2026-11-05",
   "alerted": {
-    "SOXL": true
+    "SOXL": true,
+    "SOXS": true
   }
 }
